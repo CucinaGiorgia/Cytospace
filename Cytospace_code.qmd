@@ -1,0 +1,1441 @@
+---
+title: "Cytospace_code"
+editor_options: 
+  chunk_output_type: console
+---
+
+## Packages
+
+```{r Libraries}
+library(openxlsx)
+library(here)
+library(dplyr)
+library(tibble)
+library(janitor)
+library(ggplot2)
+library(purrr)
+library(readr)
+library(data.table)
+library(viridisLite)
+library(MatrixModels)
+
+source(file = here::here("myfun_test.R"))
+```
+
+# Upload dei dati
+
+```{r Data Upload}
+ctr_og_t <- read.csv(here::here("ctrl_og_t.csv")) %>%
+janitor::clean_names() %>% 
+  dplyr::mutate(label="ctrl_og_15kT")
+
+mel_og <- read.csv(here::here("mel_og_15k.csv")) %>%
+janitor::clean_names() %>% 
+  dplyr::group_by(label) %>% 
+    dplyr::mutate(label="rpm_treat") %>% 
+  dplyr::mutate(label= case_when(area < 2300 ~ "rpm_treat_small",
+                                 TRUE ~ "rpm_treat_big"))
+
+ctr_og <- read.csv(here::here("ctrl_og-15k.csv")) %>%
+janitor::clean_names() %>% 
+  dplyr::mutate(label= case_when(area < 2300 ~ "rpm_untreat_small",
+                                 TRUE ~ "rpm_untreat_big"))
+
+total <- rbind(ctr_og, mel_og) %>% 
+  dplyr::group_by(label) %>% 
+  dplyr::mutate(mean_round= mean(round), 
+                sd_round=sd(round), 
+                mean_solidity= mean(solidity),
+                sd_sol=sd(solidity),
+                mean_area= mean(area),
+                rank=min_rank(area))
+
+est_control <- openxlsx::read.xlsx(here::here("est-ctrl.xlsx")) %>% 
+  janitor::clean_names() %>% 
+  dplyr::mutate(label="est_ctrl") %>% 
+  dplyr::filter(!is.na(area)) %>% 
+  dplyr::group_by(label) %>% 
+    dplyr::mutate(
+    mean_round = mean(round),
+    sd_round = sd(round),
+    mean_solidity = mean(solidity),
+    sd_sol = sd(solidity)
+  ) %>%
+  dplyr::select(label,
+                area,
+                round,
+                solidity,
+                mean_round,
+                mean_solidity,
+                sd_round,
+                sd_sol)
+  
+
+est_mel <- openxlsx::read.xlsx(here::here("est-mel.xlsx")) %>% 
+  janitor::clean_names() %>% 
+  dplyr::mutate(label="est_mel") %>% 
+dplyr::filter(!is.na(area)) %>% 
+  dplyr::group_by(label) %>% 
+    dplyr::mutate(
+    mean_round = mean(round),
+    sd_round = sd(round),
+    mean_solidity = mean(solidity),
+    sd_sol = sd(solidity)
+  ) %>%
+  dplyr::select(label,
+                area,
+                round,
+                solidity,
+                mean_round,
+                mean_solidity,
+                sd_round,
+                sd_sol)
+
+
+## Experimental units upload
+
+e1 <- openxlsx::read.xlsx(here::here("eu1.xlsx")) %>%
+  janitor::clean_names() %>%
+  dplyr::filter(!is.na(area)) %>%
+  dplyr::mutate(label = dplyr::case_when(area <= max(est_control$area) ~ "eu1_S",
+                                         TRUE ~ "eu1_B")) %>%
+  dplyr::group_by(label) %>%
+  dplyr::mutate(
+    mean_round = mean(round),
+    sd_round = sd(round),
+    mean_solidity = mean(solidity),
+    sd_sol = sd(solidity)
+  ) %>%
+  dplyr::select(label,
+                area,
+                round,
+                solidity,
+                mean_round,
+                mean_solidity,
+                sd_round,
+                sd_sol)%>% 
+  rbind(est_control)
+
+e2 <- openxlsx::read.xlsx(here::here("eu2.xlsx")) %>% 
+  janitor::clean_names()%>% 
+  dplyr::filter(!is.na(area)) %>%
+  dplyr::mutate(label = dplyr::case_when(area <= max(est_control$area) ~ "eu2_S",
+                                         TRUE ~ "eu2_B")) %>%
+  dplyr::group_by(label) %>%
+  dplyr::mutate(
+    mean_round = mean(round),
+    sd_round = sd(round),
+    mean_solidity = mean(solidity),
+    sd_sol = sd(solidity)
+  ) %>%
+  dplyr::select(label,
+                area,
+                round,
+                solidity,
+                mean_round,
+                mean_solidity,
+                sd_round,
+                sd_sol)%>% 
+  rbind(est_control)
+
+e3 <- openxlsx::read.xlsx(here::here("eu3.xlsx")) %>% 
+  janitor::clean_names()%>% 
+  dplyr::filter(!is.na(area)) %>%
+  dplyr::mutate(label = dplyr::case_when(area <= max(est_control$area) ~ "eu3_S",
+                                         TRUE ~ "eu3_B")) %>%
+  dplyr::group_by(label) %>%
+  dplyr::mutate(
+    mean_round = mean(round),
+    sd_round = sd(round),
+    mean_solidity = mean(solidity),
+    sd_sol = sd(solidity)
+  ) %>%
+  dplyr::select(label,
+                area,
+                round,
+                solidity,
+                mean_round,
+                mean_solidity,
+                sd_round,
+                sd_sol)%>% 
+  rbind(est_control)
+
+e4 <- openxlsx::read.xlsx(here::here("eu4.xlsx")) %>% 
+  janitor::clean_names()%>% 
+  dplyr::filter(!is.na(area)) %>%
+  dplyr::mutate(label = dplyr::case_when(area <= max(est_control$area) ~ "eu4_S",
+                                         TRUE ~ "eu4_B")) %>%
+  dplyr::group_by(label) %>%
+  dplyr::mutate(
+    mean_round = mean(round),
+    sd_round = sd(round),
+    mean_solidity = mean(solidity),
+    sd_sol = sd(solidity)
+  ) %>%
+  dplyr::select(label,
+                area,
+                round,
+                solidity,
+                mean_round,
+                mean_solidity,
+                sd_round,
+                sd_sol)%>% 
+  rbind(est_control)
+
+e5 <- openxlsx::read.xlsx(here::here("eu5.xlsx")) %>% 
+  janitor::clean_names()%>% 
+  dplyr::filter(!is.na(area)) %>%
+  dplyr::mutate(label = dplyr::case_when(area <= max(est_control$area) ~ "eu5_S",
+                                         TRUE ~ "eu5_B")) %>%
+  dplyr::group_by(label) %>%
+  dplyr::mutate(
+    mean_round = mean(round),
+    sd_round = sd(round),
+    mean_solidity = mean(solidity),
+    sd_sol = sd(solidity)
+  ) %>%
+  dplyr::select(label,
+                area,
+                round,
+                solidity,
+                mean_round,
+                mean_solidity,
+                sd_round,
+                sd_sol)%>% 
+  rbind(est_control)
+
+e6 <- openxlsx::read.xlsx(here::here("eu6.xlsx")) %>% 
+  janitor::clean_names()%>% 
+  dplyr::filter(!is.na(area)) %>%
+  dplyr::mutate(label = dplyr::case_when(area <= max(est_control$area) ~ "eu6_S",
+                                         TRUE ~ "eu6_B")) %>%
+  dplyr::group_by(label) %>%
+  dplyr::mutate(
+    mean_round = mean(round),
+    sd_round = sd(round),
+    mean_solidity = mean(solidity),
+    sd_sol = sd(solidity)
+  ) %>%
+  dplyr::select(label,
+                area,
+                round,
+                solidity,
+                mean_round,
+                mean_solidity,
+                sd_round,
+                sd_sol)%>% 
+  rbind(est_control)
+
+e8 <- openxlsx::read.xlsx(here::here("eu8.xlsx")) %>% 
+  janitor::clean_names()%>% 
+  dplyr::filter(!is.na(area)) %>%
+  dplyr::mutate(label = dplyr::case_when(area <= max(est_control$area) ~ "eu8_S",
+                                         TRUE ~ "eu8_B")) %>%
+  dplyr::group_by(label) %>%
+  dplyr::mutate(
+    mean_round = mean(round),
+    sd_round = sd(round),
+    mean_solidity = mean(solidity),
+    sd_sol = sd(solidity)
+  ) %>%
+  dplyr::select(label,
+                area,
+                round,
+                solidity,
+                mean_round,
+                mean_solidity,
+                sd_round,
+                sd_sol) %>% 
+  rbind(est_control)
+
+
+
+e_total <- rbind(e1,e2,e3,e4,e5,e6,e8, est_control, est_mel) %>%
+  dplyr::group_by(label) %>%
+  dplyr::mutate(mean_round= mean(round), 
+                sd_round=sd(round), 
+                mean_solidity= mean(solidity),
+                sd_sol=sd(solidity))
+
+ctrl_total <- rbind(est_control, est_mel) %>% 
+  dplyr::group_by(label) %>% 
+  dplyr::mutate(mean_round= mean(round), 
+                sd_round=sd(round), 
+                mean_solidity= mean(solidity),
+                sd_sol=sd(solidity),
+                mean_area= mean(area),
+                rank=min_rank(area))
+
+define_colors = function(){
+  n_of_color <- e_total %>% dplyr::group_by(label) %>% dplyr::summarise(n=n()) %>% pull(n) %>% length()
+  color_palette <- viridis::viridis(n = n_of_color , direction = -1, end = 0.70, begin = 0.30)
+}
+color_palette <- c("#40916c", "#52b788", "#74c69d", "#95d5b2", "#b7e4c7", "#89c2d9", "#0096c7", "#61a5c2", "#468faf", "#2a6f97")
+  
+```
+
+# Grafici
+
+```{r Controlli on ground treat/untreat}
+#roundness
+rbind(est_control, est_mel) %>% 
+  ggplot2::ggplot(., aes(x = label, y = mean_round, fill = label)) +
+  geom_bar(stat = "identity",
+           width = 0.5,
+           position = position_dodge()) +
+  theme_light() +
+  geom_errorbar(
+    aes(ymin = mean_round - sd_round, ymax = mean_round + sd_round),
+    width = .1,
+    position = position_dodge(.7)
+  )+
+  labs(title = "Roundness on ground", x = "Label", y = "Mean") +
+  geom_text(aes(
+    label = round(mean_round, 3),
+    vjust = 15,
+    size = 3
+  )) +
+  geom_hline(yintercept = 0)+
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none")+
+  scale_fill_manual(values=c("#8ecae6", "#219ebc"))+
+    theme(
+    plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+    axis.title.x = element_text(size = 0),
+    axis.title.y = element_text(size = 16),
+    legend.position = "none"
+  ) +
+  ylim(0, 1)
+
+#solidity
+rbind(est_control, est_mel) %>% 
+  ggplot2::ggplot(., aes(x = label, y = mean_solidity, fill = label)) +
+  geom_bar(stat = "identity",
+           width = 0.5,
+           position = position_dodge()) +
+  theme_light() +
+  geom_errorbar(
+    aes(ymin = mean_solidity - sd_sol, ymax = mean_solidity + sd_sol),
+    width = .1,
+    position = position_dodge(.7)
+  )+
+  labs(title = "Solidity on ground", x = "Label", y = "Mean") +
+  geom_text(aes(
+    label = round(mean_solidity, 3),
+    vjust = 15,
+    size = 10
+  )) +
+  geom_hline(yintercept = 0)+
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none")+
+  scale_fill_manual(values=c("#8ecae6", "#219ebc"))+
+    theme(
+    plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+    axis.title.x = element_text(size = 0),
+    axis.title.y = element_text(size = 16),
+    legend.position = "none"
+  ) +
+  ylim(0, 1)
+```
+
+```{r RPM Roundness & Solidity }
+
+#roundness
+
+ggplot2::ggplot(total, aes(x = factor(label, levels = c("rpm_treat_small", "rpm_untreat_small", "rpm_treat_big", "rpm_untreat_big")), y = mean_round, fill = label, )) +
+  geom_bar(stat = "identity",
+           width = 0.5,
+           position = position_dodge(width = 0.9)) +
+  theme_light() +
+  geom_errorbar(
+    aes(ymin = mean_round - sd_round, ymax = mean_round + sd_round),
+    width = .1,
+    position = position_dodge(.7)
+  ) +
+  labs(title = "Roundness RPM", x = "Label", y = "Mean") +
+  geom_text(aes(label = round(mean_round, 3),
+                y = mean_round / 2),
+            vjust = .5,
+            size = 5) +
+  geom_hline(yintercept = 0) +
+  scale_fill_manual(values = c("#e9ecef", "#dee2e6", "#adb5bd", "#6c757d")) +
+    theme(
+    plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+    axis.title.x = element_text(size = 0),
+    axis.title.y = element_text(size = 16),
+    legend.position = "none"
+  ) +
+  ylim(0, 1)
+
+#solidity
+
+ggplot2::ggplot(total, aes(x= factor(label, levels = c("rpm_treat_small", "rpm_untreat_small", "rpm_treat_big", "rpm_untreat_big")), y = mean_solidity, fill = label)) +
+  geom_bar(stat = "identity",
+           width = 0.5,
+           position = position_dodge(width = 0.9)) +
+  theme_light() +
+  geom_errorbar(
+    aes(ymin = mean_solidity - sd_sol, ymax = mean_solidity + sd_sol),
+    width = .1,
+    position = position_dodge(.7)
+  ) +
+  labs(title = "Solidity RPM", x = "Label", y = "Mean") +
+  geom_text(aes(label = round(mean_solidity, 3),
+                y = mean_solidity / 2),
+            vjust = .5,
+            size = 5) +
+  geom_hline(yintercept = 0) +
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.position = "none") +
+  scale_fill_manual(values = c("#e9ecef", "#dee2e6", "#adb5bd", "#6c757d")) +
+    theme(
+    plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+    axis.title.x = element_text(size = 0),
+    axis.title.y = element_text(size = 16),
+    legend.position = "none"
+  ) +
+  ylim(0, 1)
+
+
+```
+
+```{r Area distribution Docking E1 and est_CTRL }
+#est_control
+ggplot2::ggplot(ctrl_total %>% dplyr::filter(label == "est_ctrl"),
+                aes(x = rank, y = area)) +
+  geom_line(stat = "identity",
+            color = "black",
+            size=1) +
+  geom_hline(yintercept = 694, #Mean area value
+             linetype = "dashed",
+             color = "blue") +
+  theme_light() +
+  labs(title = "Area est_ctrl", x = "Rank", y = "Area") +
+  geom_hline(yintercept = 0) +
+   geom_text(
+    aes(x = 0, y = 810),   
+    label = "mean area value = 694 pxl",
+    size = 3,
+    color = "blue",
+    hjust = 0
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16),
+    legend.position = "none"
+  ) +
+  ylim(0, 3000)
+
+# e1 docking
+e1 %>%
+  dplyr::filter(label != c("est_ctrl")) %>% 
+  dplyr::mutate(label="e1") %>% 
+  dplyr::mutate(mean_area = mean(area),
+                rank = min_rank(area)) %>% 
+  ggplot2::ggplot(., aes(x = rank, y = area)) +
+  geom_line(stat = "identity", color="black", size=1) +
+  geom_hline(yintercept = 1628, #Mean area value
+             linetype = "dashed",
+             color = "blue") +
+  theme_light() +
+  labs(title = "Area eu1", x = "Rank", y = "Area") +
+  geom_hline(yintercept = 0) +
+  geom_text(
+    aes(x = 0, y = 1830),   
+    label = "mean area value = 1628 pxl",
+    size = 3,
+    color = "blue",
+    hjust = 0
+  ) +
+  theme(plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),   # Bigger Title
+        axis.title.x = element_text(size = 16),                             # Bigger X label
+        axis.title.y = element_text(size = 16),                             # Bigger Y label
+        legend.position = "none"
+  ) +
+  ylim(0, 6500)
+
+# e3 untreat
+e3 %>%
+  dplyr::filter(label != c("est_ctrl")) %>% 
+  dplyr::mutate(label="e3") %>% 
+  dplyr::mutate(mean_area = mean(area),
+                rank = min_rank(area)) %>% 
+  ggplot2::ggplot(., aes(x = rank, y = area)) +
+  geom_line(stat = "identity", , color="black", size=1) +
+  geom_hline(yintercept = 1477,
+             linetype = "dashed",
+             color = "blue") +
+  theme_light() +
+  labs(title = "Area eu3", x = "Rank", y = "Area") +
+  geom_hline(yintercept = 0) +
+       geom_text(
+    aes(x = 0, y = 1630),   
+    label = "mean area value = 1477 pxl",
+    size = 3,
+    color = "blue",
+    hjust = 0
+  ) +
+    theme(plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),   
+        axis.title.x = element_text(size = 16),                             # Bigger X label
+        axis.title.y = element_text(size = 16),                             # Bigger Y label
+        legend.position = "none"
+  ) +
+  ylim(0, 6500)
+  
+total %>%
+  dplyr::mutate(label = if_else(stringr::str_detect(label, "rpm_untreat"), "rpm_untreat", "rpm_treat")) %>%
+  dplyr::group_by(label) %>% 
+  dplyr::mutate(mean_area = mean(area), rank = min_rank(area)) %>%
+  ggplot2::ggplot(aes(x = rank, y = area, color = label, group = label)) +  # Add 'group' and 'color'
+  geom_line(position = position_dodge(width = 1), size=1) +  
+  geom_hline(yintercept = 4500, linetype = "dashed", color = "#ff5e5b") +
+  geom_hline(yintercept = 3880, linetype = "dashed", color = "#1985a1") +
+  theme_light() +
+  labs(title = "Area controls RPM", x = "Rank", y = "Area") +
+  geom_hline(yintercept = 0) +
+         geom_text(
+    aes(x = 0, y = 4800),   
+    label = "mean area treated = 4500 pxl",
+    size = 3,
+    color = "#ff5e5b",
+    hjust = 0
+  ) +
+    geom_hline(yintercept = 0) +
+         geom_text(
+    aes(x = 0, y = 4200),   
+    label = "mean area untreated = 3880 pxl",
+    size = 3,
+    color = "#1985a1",
+    hjust = 0
+  ) +
+  theme(plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),   
+        axis.title.x = element_text(size = 16),                             # Bigger X label
+        axis.title.y = element_text(size = 16),                             # Bigger Y label
+        legend.position = "bottom"
+  ) +
+  ylim(0, 6500)+
+  scale_color_manual(values = c("rpm_untreat" = "#1985a1", "rpm_treat" = "#ff5e5b"), 
+                     labels = c("rpm_untreat" = "RPM Untreated", "rpm_treat" = "RPM Treated"))
+
+
+exp_area <- rbind(ctrl_total, e1, e3, total) %>% 
+  dplyr::mutate(group = dplyr::case_when (label== "eu1_S" ~ "eu1",
+                                 label=="eu1_B" ~ "eu1",
+                                 label=="eu3_S"~ "eu3",
+                                 label=="eu3_B"~ "eu3",
+                                 label=="rpm_treat_small" ~ "RPM_treat",
+                                 label=="rpm_treat_big" ~ "RPM_treat",
+                                 label=="rpm_untreat_small" ~ "RPM_untreat",
+                                 label=="rpm_untreat_big" ~ "RPM_untreat",
+                                 TRUE ~ label
+                                 )) %>% 
+  dplyr::group_by(group) %>% 
+    dplyr::mutate(mean_area= mean(area),
+                  sd_area=sd(area)
+                ) 
+ggplot2::ggplot(exp_area, aes(x = group, y = mean_area, fill = group)) +
+  geom_bar(stat = "identity",
+           width = 0.5,
+           position = position_dodge()) +
+  theme_light() +
+  labs(title = "Area", x = "Label", y = "Mean") +
+ geom_text(aes(x = group, label = round(mean_area, 0)), 
+            y = 100,    # Adjust this value based on your plot scale
+            vjust = 0, 
+            size = 4)+
+  geom_hline(yintercept = 0)+
+      theme(
+    plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+    axis.title.x = element_text(size = 0),
+    axis.title.y = element_text(size = 16),
+    legend.position = "none"
+  )+
+  scale_fill_manual(values=color_palette)
+
+
+
+# Step 1: Compute p-values separately
+p1 <- t.test(area ~ group, data = exp_area %>% filter(group %in% c("est_mel", "est_ctrl")))$p.value
+p2 <- t.test(area ~ group, data = exp_area %>% filter(group %in% c("RPM_treat", "est_ctrl")))$p.value
+p3 <- t.test(area ~ group, data = exp_area %>% filter(group %in% c("RPM_untreat", "est_ctrl")))$p.value
+p4 <- t.test(area ~ group, data = exp_area %>% filter(group %in% c("eu1", "est_ctrl")))$p.value
+p5<- t.test(area ~ group, data = exp_area %>% filter(group %in% c("eu3", "est_ctrl")))$p.value
+# Step 2: Create a lookup table
+p_table <- tibble::tibble(
+  label = c("est_mel", "rpm_treat", "rpm_untreat", "eu1", "eu3"),
+  p_value = c(p1, p2, p3, p4,p5)
+)
+```
+
+```{r Graphical representation experimental units (small vs big)}
+# Roundness small 
+exp_small <- rbind(e3, e5, e6, e8) %>% 
+  dplyr::filter(stringr::str_detect(label, "S")) %>% 
+  dplyr::filter(!stringr::str_detect(label, "est")) %>% 
+  ggplot2::ggplot(., aes(x = label, y = mean_round, fill = label)) +
+  geom_bar(stat = "identity",
+           width = 0.5,
+           position = position_dodge()) +
+  theme_light() +
+  geom_errorbar(
+    aes(ymin = mean_round - sd_round, ymax = mean_round + sd_round),
+    width = .1,
+    position = position_dodge(.7)
+  )+
+  labs(title = "Roundness Small", x = "Label", y = "Mean") +
+  geom_text(aes(
+    label = round(mean_round, 3),
+    vjust = 10,
+    size = 3
+  )) +
+  geom_hline(yintercept = 0)+
+      theme(
+    plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+    axis.title.x = element_text(size = 0),
+    axis.title.y = element_text(size = 16),
+    legend.position = "none"
+  )+
+  scale_fill_manual(values=color_palette)+
+    ylim(0,1)
+
+
+
+# Roundness big
+exp_big <- rbind(e3, e5, e6, e8) %>% 
+  dplyr::filter(stringr::str_detect(label, "B")) %>% 
+  dplyr::filter(!stringr::str_detect(label, "est")) %>%
+    ggplot2::ggplot(., aes(x = label, y = mean_round, fill = label)) +
+  geom_bar(stat = "identity",
+           width = 0.5,
+           position = position_dodge()) +
+  theme_light() +
+  geom_errorbar(
+    aes(ymin = mean_round - sd_round, ymax = mean_round + sd_round),
+    width = .1,
+    position = position_dodge(.7)
+  )+
+  labs(title = "Roundness Big", x = "Label", y = "Mean") +
+  geom_text(aes(
+    label = round(mean_round, 3),
+    vjust = 10,
+    size = 3
+  )) +
+    geom_hline(yintercept = 0)+
+      theme(
+    plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+    axis.title.x = element_text(size = 0),
+    axis.title.y = element_text(size = 16),
+    legend.position = "none"
+  )+
+  scale_fill_manual(values=color_palette)+
+    ylim(0,1)
+
+# Solidity small
+exp_small <- rbind(e3, e5, e6, e8) %>% 
+  dplyr::filter(stringr::str_detect(label, "S")) %>% 
+  dplyr::filter(!stringr::str_detect(label, "est")) %>% 
+  ggplot2::ggplot(., aes(x = label, y = mean_solidity, fill = label)) +
+  geom_bar(stat = "identity",
+           width = 0.5,
+           position = position_dodge()) +
+  theme_light() +
+  geom_errorbar(
+    aes(ymin = mean_solidity - sd_sol, ymax = mean_solidity + sd_sol),
+    width = .1,
+    position = position_dodge(.7)
+  ) +
+  labs(title = "Solidity Small", x = "Label", y = "Mean") +
+  geom_text(aes(
+    label = round(mean_solidity, 3),
+    vjust = 15,
+    size = 3
+  )) +
+    geom_hline(yintercept = 0)+
+      theme(
+    plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+    axis.title.x = element_text(size = 0),
+    axis.title.y = element_text(size = 16),
+    legend.position = "none"
+  )+
+  scale_fill_manual(values=color_palette)+
+  ylim(0,1)
+
+
+# Solidity big
+exp_big <- rbind(e3, e5, e6, e8) %>% 
+  dplyr::filter(stringr::str_detect(label, "B")) %>% 
+  dplyr::filter(!stringr::str_detect(label, "est")) %>%
+  ggplot2::ggplot(., aes(x = label, y = mean_solidity, fill = label)) +
+  geom_bar(stat = "identity",
+           width = 0.5,
+           position = position_dodge()) +
+  theme_light() +
+  geom_errorbar(
+    aes(ymin = mean_solidity - sd_sol, ymax = mean_solidity + sd_sol),
+    width = .1,
+    position = position_dodge(.7)
+  ) +
+  labs(title = "Solidity Big", x = "Label", y = "Mean") +
+  geom_text(aes(
+    label = round(mean_solidity, 3),
+    vjust = 15,
+    size = 3
+  )) +  
+  geom_hline(yintercept = 0)+
+      theme(
+    plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+    axis.title.x = element_text(size = 0),
+    axis.title.y = element_text(size = 16),
+    legend.position = "none"
+  )+
+  scale_fill_manual(values=color_palette)+
+  ylim(0,1)
+
+```
+
+```{r Docking Roundness & Solidity}
+exp_dock <- rbind(e1, e2) %>% 
+  dplyr::filter(!stringr::str_detect(label, "est")) %>% 
+  ggplot2::ggplot(., aes(x = factor(label, levels = c("eu1_S", "eu2_S", "eu1_B", "eu2_B")), y = mean_round, fill = label)) +
+  geom_bar(stat = "identity",
+           width = 0.5,
+           position = position_dodge()) +
+  theme_light() +
+  geom_errorbar(
+    aes(ymin = mean_round - sd_round, ymax = mean_round + sd_round),
+    width = .1,
+    position = position_dodge(.7)
+  )+
+  labs(title = "Roundness Docking", x = "Label", y = "Mean") +
+  geom_text(aes(
+    label = round(mean_round, 3),
+    vjust = 10,
+    size = 3
+  )) +
+  geom_hline(yintercept = 0)+
+      theme(
+    plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+    axis.title.x = element_text(size = 0),
+    axis.title.y = element_text(size = 16),
+    legend.position = "none"
+  )+
+    scale_fill_manual(values = c("#f79d65", "#f79d65", "#f7b267", "#f7b267")) +
+    theme(
+    plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+    axis.title.x = element_text(size = 0),
+    axis.title.y = element_text(size = 16),
+    legend.position = "none"
+  ) +
+  ylim(0, 1)
+
+    
+    
+    exp_dock <- rbind(e1, e2) %>% 
+  dplyr::filter(!stringr::str_detect(label, "est")) %>% 
+  ggplot2::ggplot(., aes(x = factor(label, levels = c("eu1_S", "eu2_S", "eu1_B", "eu2_B")), y = mean_solidity, fill = label)) +
+  geom_bar(stat = "identity",
+           width = 0.5,
+           position = position_dodge()) +
+  theme_light() +
+  geom_errorbar(
+    aes(ymin = mean_solidity - sd_sol, ymax = mean_solidity + sd_sol),
+    width = .1,
+    position = position_dodge(.7)
+  )+
+  labs(title = "Solidity Docking", x = "Label", y = "Mean") +
+  geom_text(aes(
+    label = round(mean_solidity, 3),
+    vjust = 10,
+    size = 3
+  )) +
+  geom_hline(yintercept = 0)+
+      theme(
+    plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+    axis.title.x = element_text(size = 0),
+    axis.title.y = element_text(size = 16),
+    legend.position = "none"
+  )+
+    scale_fill_manual(values = c("#f79d65", "#f79d65", "#f7b267", "#f7b267")) +
+    theme(
+    plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+    axis.title.x = element_text(size = 0),
+    axis.title.y = element_text(size = 16),
+    legend.position = "none"
+  ) +
+  ylim(0, 1)
+```
+
+```{r p_values for each eu}
+p_values <- e_total %>%
+  dplyr::mutate(p_value_solidity = case_when(
+    label %in% c("eu1_S", "est_ctrl") ~ t.test(solidity ~ label, data = e_total %>% dplyr::filter(label %in% c("eu1_S", "est_ctrl")))$p.value,
+    label %in% c("eu1_B", "est_ctrl") ~ t.test(solidity ~ label, data = e_total %>% dplyr::filter(label %in% c("eu1_B", "est_ctrl")))$p.value,
+    label %in% c("eu2_S", "est_ctrl") ~ t.test(solidity ~ label, data = e_total %>% dplyr::filter(label %in% c("eu2_S", "est_ctrl")))$p.value,
+    label %in% c("eu2_B", "est_ctrl") ~ t.test(solidity ~ label, data = e_total %>% dplyr::filter(label %in% c("eu2_B", "est_ctrl")))$p.value,
+    label %in% c("eu3_S", "est_ctrl") ~ t.test(solidity ~ label, data = e_total %>% dplyr::filter(label %in% c("eu3_S", "est_ctrl")))$p.value,
+    label %in% c("eu3_B", "est_ctrl") ~ t.test(solidity ~ label, data = e_total %>% dplyr::filter(label %in% c("eu3_B", "est_ctrl")))$p.value,
+    label %in% c("eu5_S", "est_ctrl") ~ t.test(solidity ~ label, data = e_total %>% dplyr::filter(label %in% c("eu5_S", "est_ctrl")))$p.value,
+    label %in% c("eu5_B", "est_ctrl") ~ t.test(solidity ~ label, data = e_total %>% dplyr::filter(label %in% c("eu5_B", "est_ctrl")))$p.value,
+    label %in% c("eu6_S", "est_ctrl") ~ t.test(solidity ~ label, data = e_total %>% dplyr::filter(label %in% c("eu6_S", "est_mel")))$p.value,
+    label %in% c("eu6_B", "est_ctrl") ~ t.test(solidity ~ label, data = e_total %>% dplyr::filter(label %in% c("eu6_B", "est_mel")))$p.value,
+    label %in% c("eu8_S", "est_ctrl") ~ t.test(solidity ~ label, data = e_total %>% dplyr::filter(label %in% c("eu8_S", "est_mel")))$p.value,
+    label %in% c("eu8_B", "est_ctrl") ~ t.test(solidity ~ label, data = e_total %>% dplyr::filter(label %in% c("eu8_B", "est_mel")))$p.value,
+    TRUE ~ NA_real_  # Assign NA for labels not matching any of the conditions
+  )) %>% 
+    dplyr::mutate(p_value_round = case_when(
+    label %in% c("eu1_S", "est_ctrl") ~ t.test(round ~ label, data = e_total %>% dplyr::filter(label %in% c("eu1_S", "est_ctrl")))$p.value,
+    label %in% c("eu1_B", "est_ctrl") ~ t.test(round ~ label, data = e_total %>% dplyr::filter(label %in% c("eu1_B", "est_ctrl")))$p.value,
+    label %in% c("eu2_S", "est_ctrl") ~ t.test(round ~ label, data = e_total %>% dplyr::filter(label %in% c("eu2_S", "est_ctrl")))$p.value,
+    label %in% c("eu2_B", "est_ctrl") ~ t.test(round ~ label, data = e_total %>% dplyr::filter(label %in% c("eu2_B", "est_ctrl")))$p.value,
+    label %in% c("eu3_S", "est_ctrl") ~ t.test(round ~ label, data = e_total %>% dplyr::filter(label %in% c("eu3_S", "est_ctrl")))$p.value,
+    label %in% c("eu3_B", "est_ctrl") ~ t.test(round ~ label, data = e_total %>% dplyr::filter(label %in% c("eu3_B", "est_ctrl")))$p.value,
+    label %in% c("eu5_S", "est_ctrl") ~ t.test(round ~ label, data = e_total %>% dplyr::filter(label %in% c("eu5_S", "est_ctrl")))$p.value,
+    label %in% c("eu5_B", "est_ctrl") ~ t.test(round ~ label, data = e_total %>% dplyr::filter(label %in% c("eu5_B", "est_ctrl")))$p.value,
+    label %in% c("eu6_S", "est_ctrl") ~ t.test(round ~ label, data = e_total %>% dplyr::filter(label %in% c("eu6_S", "est_mel")))$p.value,
+    label %in% c("eu6_B", "est_ctrl") ~ t.test(round ~ label, data = e_total %>% dplyr::filter(label %in% c("eu6_B", "est_mel")))$p.value,
+    label %in% c("eu8_S", "est_ctrl") ~ t.test(round ~ label, data = e_total %>% dplyr::filter(label %in% c("eu8_S", "est_mel")))$p.value,
+    label %in% c("eu8_B", "est_ctrl") ~ t.test(round ~ label, data = e_total %>% dplyr::filter(label %in% c("eu8_B", "est_mel")))$p.value,
+    TRUE ~ NA_real_  # Assign NA for labels not matching any of the conditions
+  )) %>% 
+  distinct(label, .keep_all = TRUE) %>% View()
+
+
+
+p_value_tot <- rbind(e_total, total) 
+
+# Step 1: Compute p-values separately
+p1 <- t.test(round ~ label, data = p_value_tot %>% filter(label %in% c("rpm_untreat_small", "est_ctrl")))$p.value
+p2 <- t.test(round ~ label, data = p_value_tot %>% filter(label %in% c("rpm_untreat_big", "est_ctrl")))$p.value
+p3 <- t.test(round ~ label, data = p_value_tot %>% filter(label %in% c("rpm_treat_small", "est_mel")))$p.value
+p4 <- t.test(round ~ label, data = p_value_tot %>% filter(label %in% c("rpm_treat_big", "est_mel")))$p.value
+
+# Step 2: Create a lookup table
+p_table <- tibble::tibble(
+  label = c("rpm_untreat_small", "rpm_untreat_big", "rpm_treat_small", "rpm_treat_big"),
+  p_value = c(p1, p2, p3, p4)
+)
+
+
+```
+
+```{r e1, e3, e6 same density}
+e136 <- rbind(e1, e3, e6, est_mel)
+
+
+e136 %>%
+  ggplot2::ggplot(., aes(x = factor(label, levels = c("e1s", "e3s", "e6s", "e1b", "e3b", "e6b", "est_ctrl", "est_mel")), y = mean_round, fill = label)) +
+  geom_bar(stat = "identity",
+           width = 0.5,
+           position = position_dodge()) +
+  theme_minimal() +
+  geom_errorbar(
+    aes(ymin = mean_round - sd_round, ymax = mean_round + sd_round),
+    width = .1,
+    position = position_dodge(.7)
+  ) +
+  labs(title = "Roundness E1, E3,E6", x = "Label", y = "Mean") +
+  geom_text(aes(
+    label = round(mean_round, 3),
+    y = mean_round / 2),
+    vjust = 0.5,
+    size = 3
+  ) +  
+  geom_hline(yintercept = 0)+
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none")+
+  scale_fill_manual(values=c("#f79d65", "#f79d65", "#40916c",  "#40916c", "#74c69d","#74c69d","#8ecae6", "#219ebc" ))+
+  ylim(0,1)
+
+e136 %>%
+  ggplot2::ggplot(., aes(x = factor(label, levels = c("e1s", "e3s", "e6s", "e1b", "e3b", "e6b", "est_ctrl", "est_mel")), y = mean_solidity, fill = label)) +
+  geom_bar(stat = "identity",
+           width = 0.5,
+           position = position_dodge()) +
+  theme_minimal() +
+  geom_errorbar(
+    aes(ymin = mean_solidity - sd_sol, ymax = mean_solidity + sd_sol),
+    width = .1,
+    position = position_dodge(.7)
+  ) +
+  labs(title = "Solidity E1, E3,E6", x = "Label", y = "Mean") +
+  geom_text(aes(
+    label = round(mean_solidity, 3),
+    y = mean_solidity / 2),
+    vjust = 0.5,
+    size = 3
+  ) +  
+  geom_hline(yintercept = 0)+
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none")+
+  scale_fill_manual(values=c("#f79d65", "#f79d65", "#40916c",  "#40916c", "#74c69d","#74c69d","#8ecae6", "#219ebc" ))+
+  ylim(0,1)
+```
+
+```{r e2, e5, e8 same density}
+e258 <- rbind(e2, e5, e8, est_mel)
+
+
+e258 %>%
+  ggplot2::ggplot(., aes(x = factor(label, levels = c("e2s", "e5s", "e8s", "e2b", "e5b", "e8b", "est_ctrl", "est_mel")), y = mean_round, fill = label)) +
+  geom_bar(stat = "identity",
+           width = 0.5,
+           position = position_dodge()) +
+  theme_minimal() +
+  geom_errorbar(
+    aes(ymin = mean_round - sd_round, ymax = mean_round + sd_round),
+    width = .1,
+    position = position_dodge(.7)
+  ) +
+  labs(title = "Roundness E2, E5, E8", x = "Label", y = "Mean") +
+  geom_text(aes(
+    label = round(mean_round, 3),
+    y = mean_round / 2),
+    vjust = 0.5,
+    size = 3
+  ) +  
+  geom_hline(yintercept = 0)+
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none")+
+  scale_fill_manual(values=c("#f7b267","#f7b267", "#52b788",  "#52b788", "#95d5b2","#95d5b2","#8ecae6", "#219ebc" ))+
+  ylim(0,1)
+
+
+
+e258 %>%
+  ggplot2::ggplot(., aes(x = factor(label, levels = c("e2s", "e5s", "e8s", "e2b", "e5b", "e8b", "est_ctrl", "est_mel")), y = mean_solidity, fill = label)) +
+  geom_bar(stat = "identity",
+           width = 0.5,
+           position = position_dodge()) +
+  theme_minimal() +
+  geom_errorbar(
+    aes(ymin = mean_solidity - sd_sol, ymax = mean_solidity + sd_sol),
+    width = .1,
+    position = position_dodge(.7)
+  ) +
+  labs(title = "Solidity E2, E5, E8", x = "Label", y = "Mean") +
+  geom_text(aes(
+    label = round(mean_solidity, 3),
+    y = mean_solidity / 2),
+    vjust = 0.5,
+    size = 3
+  ) +  
+  geom_hline(yintercept = 0)+
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none")+
+  scale_fill_manual(values=c("#f7b267","#f7b267", "#52b788",  "#52b788", "#95d5b2","#95d5b2","#8ecae6", "#219ebc" ))+
+  ylim(0,1)
+```
+
+## MICROTUBULES
+
+```{r Data upload}
+og_mel <- read.csv(here::here("Mel_og.csv")) %>%
+janitor::clean_names() %>% 
+  dplyr::mutate(mean= mean(area)) %>% 
+  dplyr::filter(area>700) %>% 
+  dplyr::mutate(mean_den= mean(int_den),
+                cyt_den= mean_den/mean,
+                sd_cyt=sd(int_den)) %>% 
+  dplyr::mutate(condition="1g_mel")
+
+og <- read.csv(here::here("og.csv")) %>%
+janitor::clean_names() %>% 
+  dplyr::mutate(mean= mean(area)) %>% 
+  dplyr::filter(area>1130) %>% 
+  dplyr::mutate(mean_den= mean(int_den),
+                cyt_den= mean_den/mean,
+                sd_cyt=sd(int_den))%>% 
+  dplyr::mutate(condition="1g")
+
+rpm_ctrl <- read.csv(here::here("rpm_ctrl.csv")) %>%
+janitor::clean_names() %>% 
+  dplyr::mutate(mean= mean(area)) %>% 
+  dplyr::filter(area>293) %>% 
+  dplyr::mutate(mean_den= mean(int_den),
+                cyt_den= mean_den/mean,
+                sd_cyt=sd(int_den))%>% 
+  dplyr::mutate(condition="rpm_ctrl")
+
+rpm_dock <- read.csv(here::here("rpm_dock.csv")) %>%
+janitor::clean_names() %>% 
+  dplyr::mutate(mean= mean(area)) %>% 
+  dplyr::filter(area>1700) %>% 
+  dplyr::mutate(mean_den= mean(int_den),
+                cyt_den= mean_den/mean,
+                sd_cyt=sd(int_den))%>% 
+  dplyr::mutate(condition="rpm_dock")
+  
+space_ctrl <- read.csv(here::here("space_ctrl.csv")) %>%
+janitor::clean_names() %>% 
+  dplyr::mutate(mean= mean(area)) %>% 
+  dplyr::filter(area>591) %>% 
+  dplyr::mutate(mean_den= mean(int_den),
+                cyt_den= mean_den/mean,
+                sd_cyt=sd(int_den)) %>% 
+  dplyr::mutate(condition="space_ctrl")
+
+space_dock <- read.csv(here::here("space_dock.csv")) %>%
+janitor::clean_names() %>% 
+  dplyr::mutate(mean= mean(area)) %>% 
+  dplyr::filter(area>1570) %>% 
+  dplyr::mutate(mean_den= mean(int_den),
+                cyt_den= mean_den/mean,
+                sd_cyt=sd(int_den))%>% 
+  dplyr::mutate(condition="space_dock")
+
+space_mel <- read.csv(here::here("space_mel.csv")) %>%
+janitor::clean_names() %>% 
+  dplyr::mutate(mean= mean(area)) %>%
+  dplyr::filter(area>480) %>% 
+  dplyr::mutate(mean_den= mean(int_den),
+                cyt_den= mean_den/mean,
+                sd_cyt=sd(int_den))%>% 
+  dplyr::mutate(condition="space_mel")
+
+tub_distr <- rbind(og_mel, og, rpm_ctrl, space_ctrl, space_mel) %>%
+  dplyr::group_by(cyt_den, condition)
+
+
+p1 <- t.test(int_den ~ condition, data = tub_distr %>% filter(condition %in% c("rpm_ctrl", "1g")))$p.value
+p2 <- t.test(int_den ~ condition, data = tub_distr %>% filter(condition %in% c("space_ctrl", "1g")))$p.value
+p3 <- t.test(int_den ~ condition, data = tub_distr %>% filter(condition %in% c("1g_mel", "1g")))$p.value
+p4 <- t.test(int_den ~ condition, data = tub_distr %>% filter(condition %in% c("space_mel", "1g")))$p.value
+
+# Step 2: Create a lookup table
+p_table <- tibble::tibble(
+  label = c("rpm_ctrl", "space_ctrl", "1g_mel", "space_mel"),
+  p_value = c(p1, p2, p3, p4)
+)
+
+```
+
+```{r Bar plot cytoskeleton density distribution}
+ggplot2::ggplot(tub_distr, aes(
+  x = factor(
+    condition,
+    levels = c(
+      "1g",
+      "rpm_ctrl",
+      "space_ctrl",
+      "1g_mel",
+      "space_mel"
+    )
+  ),
+  y = cyt_den,
+  fill = condition
+)) +
+  geom_bar(stat = "identity",
+           width = 0.8,
+           position = position_dodge()) +
+  theme_light() +
+  labs(title = "Cytoskeleton density distribution", x = "Condition", y = "Density") +
+  geom_text(aes(
+    label = round(cyt_den, 0),
+    vjust = 5,
+    size = 3
+  )) +
+  geom_hline(yintercept = 0) +
+      theme(
+    plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+    axis.title.x = element_text(size = 0),
+    axis.title.y = element_text(size = 16),
+    legend.position = "none"
+  )+
+  scale_fill_manual(values = c(
+    "#6a994e",
+    "#a7c957",
+    "#fdc43f",
+    "#ffdb57",
+    "#02cecb",
+    "#b4ffff",
+    "#99d6ea"
+      ))
+
+```
+
+```{r Distribution cytoskeleton symmetry}
+og_sym <- read.csv(here::here("og_ctrl_symmetry.csv")) %>%
+janitor::clean_names() %>% 
+  dplyr::mutate(odd_even= if_else(x %% 2 == 0 , "odd", "even")) %>% 
+  dplyr::group_by(odd_even) %>% 
+  dplyr::mutate(mean_int= mean(int_den)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(median_int= median(int_den)) #Calcolo della mediana per stabilire il valore di riferimento per il controllo; questo valore sarà implementato nei successivi df per determinare la variabilità -> considerata come significativa per una differenza +/- del 20%.
+
+
+mel_sym <- read.csv(here::here("og_mel_symmetry.csv")) %>%
+janitor::clean_names() %>% 
+  dplyr::mutate(odd_even= if_else(x %% 2 == 0 , "odd", "even"))%>% 
+  dplyr::mutate(variation_ctrl= dplyr::case_when(int_den >= (271782+ (0.20*271782)) ~ "up",
+                                            int_den < (271782-(0.20*271782)) ~ "down",
+                                            TRUE ~ "no")) %>% #variazione nel valore della densità rispetto alla mediana del controllo
+  dplyr::mutate(cell= (x + 1) %/% 2) %>% #creo dei nuovi gruppi che corrispondono alle due estremità di ciascuna cellula
+  dplyr::group_by(cell) %>%
+  dplyr::mutate(mean_cell= mean(int_den)) %>% 
+  dplyr::mutate(percentage= round((int_den/mean_cell)*100)) %>% 
+  dplyr::mutate(variation_cell= diff(percentage)) %>% 
+  dplyr::mutate(significant= dplyr::case_when(variation_cell>=20 ~ "yes",
+                                              variation_cell <= -20 ~ "yes",
+                                              TRUE ~ "no")) %>% 
+    dplyr::ungroup() %>% 
+  dplyr::mutate(median_int= median(int_den))
+  
+  
+  
+
+rpm_sym <- read.csv(here::here("rpm_ctrl_symmetry.csv")) %>%
+janitor::clean_names() %>% 
+  dplyr::filter(int_den!=0) %>% 
+  dplyr::mutate(x= 1:n()) %>% #rinumero le cellule
+  dplyr::mutate(odd_even= if_else(x %% 2 == 0 , "odd", "even"))%>% 
+  dplyr::mutate(variation_ctrl= dplyr::case_when(int_den >= (271782+ (0.20*271782)) ~ "up",
+                                            int_den < (271782-(0.20*271782)) ~ "down",
+                                            TRUE ~ "no")) %>% #variazione nel valore della densità rispetto alla mediana del controllo
+  dplyr::mutate(cell= (x + 1) %/% 2) %>% #creo dei nuovi gruppi che corrispondono alle due estremità di ciascuna cellula
+  dplyr::group_by(cell) %>%
+  dplyr::mutate(mean_cell= mean(int_den)) %>% 
+  dplyr::mutate(percentage= round((int_den/mean_cell)*100)) %>% 
+  dplyr::mutate(variation_cell= diff(percentage)) %>% 
+  dplyr::mutate(significant= dplyr::case_when(variation_cell>=20 ~ "yes",
+                                              variation_cell <= -20 ~ "yes",
+                                              TRUE ~ "no")) %>% 
+    dplyr::ungroup() %>% 
+  dplyr::mutate(median_int= median(int_den))
+
+space_mel_sym <- read.csv(here::here("space_mel_symmetry.csv")) %>%
+janitor::clean_names() %>% 
+  dplyr::mutate(odd_even= if_else(x %% 2 == 0 , "odd", "even"))%>% 
+  dplyr::mutate(variation_ctrl= dplyr::case_when(int_den >= (271782 + (0.20*271782)) ~ "up",
+                                            int_den < (271782-(0.20*271782)) ~ "down",
+                                            TRUE ~ "no")) %>% #variazione nel valore della densità rispetto alla mediana del controllo
+  dplyr::mutate(cell= (x + 1) %/% 2) %>% #creo dei nuovi gruppi che corrispondono alle due estremità di ciascuna cellula
+  dplyr::group_by(cell) %>%
+  dplyr::mutate(mean_cell= mean(int_den)) %>% 
+  dplyr::mutate(percentage= round((int_den/mean_cell)*100)) %>% 
+  dplyr::mutate(variation_cell= diff(percentage)) %>% 
+  dplyr::mutate(significant= dplyr::case_when(variation_cell >= 20 ~ "yes",
+                                              variation_cell <= -20 ~ "yes",
+                                              TRUE ~ "no")) %>% 
+    dplyr::ungroup() %>% 
+  dplyr::mutate(median_int= median(int_den))
+
+space_ctrl_sym <- read.csv(here::here("space_ctrl_simmetry.csv")) %>%
+janitor::clean_names() %>% 
+  dplyr::mutate(odd_even= if_else(x %% 2 == 0 , "odd", "even"))%>% 
+  dplyr::mutate(variation_ctrl= dplyr::case_when(int_den >= (271782+ (0.20*271782)) ~ "up",
+                                            int_den < (271782-(0.20*271782)) ~ "down",
+                                            TRUE ~ "no")) %>% #variazione nel valore della densità rispetto alla mediana del controllo
+  dplyr::mutate(cell= (x + 1) %/% 2) %>% #creo dei nuovi gruppi che corrispondono alle due estremità di ciascuna cellula
+  dplyr::group_by(cell) %>%
+  dplyr::mutate(mean_cell= mean(int_den)) %>% 
+  dplyr::mutate(percentage= round((int_den/mean_cell)*100)) %>% 
+  dplyr::mutate(variation_cell= diff(percentage)) %>% 
+  dplyr::mutate(significant= dplyr::case_when(variation_cell>=20 ~ "yes",
+                                              variation_cell <= -20 ~ "yes",
+                                              TRUE ~ "no")) %>% 
+    dplyr::ungroup() %>% 
+  dplyr::mutate(median_int= median(int_den))
+
+
+ggplot2::ggplot(og_sym %>% dplyr::filter(odd_even!="odd"), aes(x= x, y=int_den))+
+  geom_bar(stat="identity",
+           position = position_dodge())+
+  theme_minimal()+
+  labs(x = "Side1", y = "Density") +
+  geom_hline(yintercept = 0)+
+  geom_hline(yintercept = 271782, color="red")+
+  #geom_hline(yintercept = space_mel_sym$median_int, color="blue")+
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none")+
+  ylim(0, 740000)
+
+#For each experimental condition it is performed the same analysis, maybe it could be a good idea to construct a function and automate it. 
+```
+
+## NUCLEI
+
+```{r Data upload}
+nuc_og_ctrl <- read.csv(here::here("nuc_og_ctrl.csv")) %>% 
+  janitor::clean_names() %>% 
+  dplyr::mutate(label="og_ctrl") %>% 
+  dplyr::filter(!is.na(area)) %>% 
+    dplyr::filter(area>= 1000) %>% 
+  dplyr::group_by(label) %>% 
+    dplyr::mutate(
+      mean_area = mean(area),
+      sd_area=sd(area),
+    mean_round = mean(round),
+    sd_round = sd(round),
+    mean_solidity = mean(solidity),
+    sd_sol = sd(solidity)
+  ) %>%
+  dplyr::select(label,
+                area,
+                round,
+                solidity,
+                mean_area,
+                mean_round,
+                mean_solidity,
+                sd_round,
+                sd_sol,
+                sd_area)
+
+nuc_og_mel <- read.csv(here::here("nuc_og_mel.csv")) %>% 
+  janitor::clean_names() %>% 
+  dplyr::mutate(label="og_mel") %>% 
+  dplyr::filter(!is.na(area)) %>% 
+    dplyr::filter(area>= 1000) %>% 
+  dplyr::group_by(label) %>% 
+    dplyr::mutate(
+      mean_area = mean(area),
+      sd_area=sd(area),
+    mean_round = mean(round),
+    sd_round = sd(round),
+    mean_solidity = mean(solidity),
+    sd_sol = sd(solidity)
+  ) %>%
+  dplyr::select(label,
+                area,
+                round,
+                solidity,
+                mean_area,
+                mean_round,
+                mean_solidity,
+                sd_round,
+                sd_sol,
+                sd_area)
+
+nuc_rpm <- read.csv(here::here("nuc_rpm.csv")) %>% 
+  janitor::clean_names() %>% 
+  dplyr::mutate(label="rpm_ctrl") %>% 
+  dplyr::filter(!is.na(area)) %>% 
+    dplyr::filter(area>= 1000) %>% 
+  dplyr::group_by(label) %>% 
+    dplyr::mutate(
+      mean_area = mean(area),
+      sd_area=sd(area),
+    mean_round = mean(round),
+    sd_round = sd(round),
+    mean_solidity = mean(solidity),
+    sd_sol = sd(solidity)
+  ) %>%
+  dplyr::select(label,
+                area,
+                round,
+                solidity,
+                mean_area,
+                mean_round,
+                mean_solidity,
+                sd_round,
+                sd_sol,
+                sd_area)
+
+nuc_docking <- read.csv(here::here("nuc_docking.csv")) %>% 
+  janitor::clean_names() %>% 
+  dplyr::mutate(label="rpm_docking") %>% 
+  dplyr::filter(!is.na(area)) %>% 
+  dplyr::filter(area>= 1000) %>% 
+  dplyr::group_by(label) %>% 
+    dplyr::mutate(
+      mean_area = mean(area),
+      sd_area=sd(area),
+    mean_round = mean(round),
+    sd_round = sd(round),
+    mean_solidity = mean(solidity),
+    sd_sol = sd(solidity)
+  ) %>%
+  dplyr::select(label,
+                area,
+                round,
+                solidity,
+                mean_area,
+                mean_round,
+                mean_solidity,
+                sd_round,
+                sd_sol,
+                sd_area)
+
+space_nuc_ctrl <- read.csv(here::here("space_nuc_ctrl.csv")) %>% 
+  janitor::clean_names() %>% 
+  dplyr::mutate(label="space_ctrl") %>% 
+  dplyr::filter(!is.na(area)) %>% 
+  dplyr::filter(area>= 1000) %>% 
+  dplyr::group_by(label) %>% 
+    dplyr::mutate(
+      mean_area = mean(area),
+      sd_area=sd(area),
+    mean_round = mean(round),
+    sd_round = sd(round),
+    mean_solidity = mean(solidity),
+    sd_sol = sd(solidity)
+  ) %>%
+  dplyr::select(label,
+                area,
+                round,
+                solidity,
+                mean_area,
+                mean_round,
+                mean_solidity,
+                sd_round,
+                sd_sol,
+                sd_area)
+
+space_nuc_docking <- read.csv(here::here("space_nuc_docking.csv")) %>% 
+  janitor::clean_names() %>% 
+  dplyr::mutate(label="space_docking") %>% 
+  dplyr::filter(!is.na(area)) %>% 
+  dplyr::filter(area>= 1000) %>% 
+  dplyr::group_by(label) %>% 
+    dplyr::mutate(
+      mean_area = mean(area),
+      sd_area=sd(area),
+    mean_round = mean(round),
+    sd_round = sd(round),
+    mean_solidity = mean(solidity),
+    sd_sol = sd(solidity)
+  ) %>%
+  dplyr::select(label,
+                area,
+                round,
+                solidity,
+                mean_area,
+                mean_round,
+                mean_solidity,
+                sd_round,
+                sd_sol,
+                sd_area)
+
+space_nuc_mel <- read.csv(here::here("space_nuc_mel.csv")) %>% 
+  janitor::clean_names() %>% 
+  dplyr::mutate(label="space_mel") %>% 
+  dplyr::filter(!is.na(area)) %>% 
+  dplyr::filter(area>= 1000) %>% 
+  dplyr::group_by(label) %>% 
+    dplyr::mutate(
+      mean_area = mean(area),
+      sd_area=sd(area),
+    mean_round = mean(round),
+    sd_round = sd(round),
+    mean_solidity = mean(solidity),
+    sd_sol = sd(solidity)
+  ) %>%
+  dplyr::select(label,
+                area,
+                round,
+                solidity,
+                mean_area,
+                mean_round,
+                mean_solidity,
+                sd_round,
+                sd_sol,
+                sd_area)
+```
+
+```{r Graphical representation}
+# New merged dataframe
+nuclei <- rbind(nuc_og_ctrl, nuc_og_mel, nuc_rpm, space_nuc_ctrl, space_nuc_mel) 
+ 
+# Roundness   
+ggplot2::ggplot(nuclei, aes(x = factor(
+    label,
+    levels = c(
+      "og_ctrl",
+      "rpm_ctrl",
+      "space_ctrl",
+      "og_mel",
+      "space_mel"
+    )), y = mean_round, fill = label)) +
+  geom_bar(stat = "identity",
+           width = 0.5,
+           position = position_dodge()) +
+  theme_minimal() +
+  geom_errorbar(
+    aes(ymin = mean_round - sd_round, ymax = mean_round + sd_round),
+    width = .1,
+    position = position_dodge(.7)
+  ) +
+  labs(title = "Roundness Nuclei", x = "Label", y = "Mean") +
+  geom_text(aes(
+    label = round(mean_round, 3),
+    vjust = 15,
+    size = 3
+  )) +  
+  geom_hline(yintercept = 0)+
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none")+
+  scale_fill_manual(values=c("#6a994e",
+    "#a7c957",
+    "#fdc43f",
+    "#ffdb57",
+    "#02cecb",
+    "#b4ffff",
+    "#99d6ea"
+      ))+
+  ylim(0,1)
+
+# Area
+ggplot2::ggplot(nuclei, aes(x = factor(
+    label,
+    levels = c(
+      "og_ctrl",
+      "rpm_ctrl",
+      "space_ctrl",
+      "og_mel",
+      "space_mel"
+    )), y = mean_area, fill = label)) +
+  geom_bar(stat = "identity",
+           width = 0.5,
+           position = position_dodge()) +
+  theme_minimal() +
+    geom_errorbar(
+    aes(ymin = mean_area - sd_area, ymax = mean_area + sd_area),
+    width = .1,
+    position = position_dodge(.7)
+  ) +
+  labs(title = "Area Nuclei", x = "Label", y = "Area") +
+  geom_text(aes(
+    label = round(mean_area, 0),
+    vjust = 12,
+    size = 3
+  )) +  
+  geom_hline(yintercept = 0)+
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none")+
+  scale_fill_manual(values=c("#6a994e",
+    "#a7c957",
+    "#fdc43f",
+    "#ffdb57",
+    "#02cecb",
+    "#b4ffff",
+    "#99d6ea"
+      ))
+
+
+```
+
+```{r p_values for nuclei}
+p_values <- nuclei %>%
+  dplyr::mutate(p_value_solidity = case_when(
+    label %in% c("og_mel", "og_ctrl") ~ t.test(solidity ~ label, data = nuclei %>% dplyr::filter(label %in% c("og_mel", "og_ctrl")))$p.value,
+    label %in% c("rpm_ctrl", "og_ctrl") ~ t.test(solidity ~ label, data = nuclei %>% dplyr::filter(label %in% c("rpm_ctrl", "og_ctrl")))$p.value,
+    label %in% c("space_ctrl", "og_ctrl") ~ t.test(solidity ~ label, data = nuclei %>% dplyr::filter(label %in% c("space_ctrl", "og_ctrl")))$p.value,
+    label %in% c("space_mel", "og_ctrl") ~ t.test(solidity ~ label, data = nuclei %>% dplyr::filter(label %in% c("space_mel", "og_ctrl")))$p.value,
+    TRUE ~ NA_real_  # Assign NA for labels not matching any of the conditions
+  )) %>%
+    dplyr::mutate(p_value_area= case_when(
+    label %in% c("og_mel", "og_ctrl") ~ t.test(area ~ label, data = nuclei %>% dplyr::filter(label %in% c("og_mel", "og_ctrl")))$p.value,
+    label %in% c("rpm_ctrl", "og_ctrl") ~ t.test(area ~ label, data = nuclei %>% dplyr::filter(label %in% c("rpm_ctrl", "og_ctrl")))$p.value,
+    label %in% c("space_ctrl", "og_ctrl") ~ t.test(area ~ label, data = nuclei %>% dplyr::filter(label %in% c("space_ctrl", "og_ctrl")))$p.value,
+    label %in% c("space_mel", "og_ctrl") ~ t.test(area ~ label, data = nuclei %>% dplyr::filter(label %in% c("space_mel", "og_ctrl")))$p.value,
+    TRUE ~ NA_real_  # Assign NA for labels not matching any of the conditions
+  )) %>% 
+      dplyr::mutate(p_value_round = case_when(
+    label %in% c("og_mel", "og_ctrl") ~ t.test(round ~ label, data = nuclei %>% dplyr::filter(label %in% c("og_mel", "og_ctrl")))$p.value,
+    label %in% c("rpm_ctrl", "og_ctrl") ~ t.test(round ~ label, data = nuclei %>% dplyr::filter(label %in% c("rpm_ctrl", "og_ctrl")))$p.value,
+    label %in% c("space_ctrl", "og_ctrl") ~ t.test(round ~ label, data = nuclei %>% dplyr::filter(label %in% c("space_ctrl", "og_ctrl")))$p.value,
+    label %in% c("space_mel", "og_ctrl") ~ t.test(round ~ label, data = nuclei %>% dplyr::filter(label %in% c("space_mel", "og_ctrl")))$p.value,
+    TRUE ~ NA_real_  # Assign NA for labels not matching any of the conditions
+  )) %>% 
+  distinct(label, .keep_all = TRUE) %>% 
+  dplyr::mutate(p_value_solidity= round(p_value_solidity, 5),
+                p_value_round= round(p_value_round, 5),
+                p_value_area= round(p_value_area, 5)) %>% View()
+
+```
+
+```{r}
+
+```
+
